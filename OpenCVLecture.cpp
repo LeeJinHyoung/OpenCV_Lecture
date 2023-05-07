@@ -73,7 +73,7 @@ BEGIN_MESSAGE_MAP(COpenCVAppGUIDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BTN_LOAD, &COpenCVAppGUIDlg::OnBnClickedBtnLoad)
 	ON_BN_CLICKED(IDC_BTN_SAVE, &COpenCVAppGUIDlg::OnBnClickedBtnSave)
 	ON_BN_CLICKED(IDC_BTN_Inspection, &COpenCVAppGUIDlg::OnBnClickedBtnInspection)
-	ON_BN_CLICKED(IDC_BUTTON_INSPECTION_CV, &COpenCVAppGUIDlg::OnBnClickedBtnInspectionCv)
+	ON_BN_CLICKED(IDC_BTN_INSPECTION_CV, &COpenCVAppGUIDlg::OnBnClickedBtnInspectionCv)
 	ON_BN_CLICKED(IDC_BTN_SAMPLE_CODE, &COpenCVAppGUIDlg::OnBnClickedBtnSampleCode)
 END_MESSAGE_MAP()
 
@@ -156,6 +156,8 @@ BOOL COpenCVAppGUIDlg::OnInitDialog()
 
 
 	_mMatBuff.clear();
+	_mInsps.clear();
+
 
 	return TRUE;  // 포커스를 컨트롤에 설정하지 않으면 TRUE를 반환합니다.
 }
@@ -221,7 +223,6 @@ void COpenCVAppGUIDlg::OnPaint()
 			CRect rt = iter->second;
 			dc.FillRect(rt, &brush);
 		}
-
 
 		if (!_mMatBuff[eImgSrcColor].empty())
 		{
@@ -353,9 +354,11 @@ void COpenCVAppGUIDlg::OnBnClickedBtnLoad()
 		_SourceImage = cv::imread(fileName, IMREAD_ANYCOLOR);
 
 		OnAllocateBuffer(_SourceImage.cols, _SourceImage.rows);
-
-
 		UpdateDispSrc();
+
+		//add update inspection list
+		UpdateInspList();
+
 
 		InvalidateRect(_rtImageView, FALSE);
 		//AfxMessageBox("Image Loaded");
@@ -463,7 +466,6 @@ void COpenCVAppGUIDlg::OnBnClickedBtnInspection()
 			}
 		}
 	}
-
 
 
 	//result & display
@@ -578,6 +580,22 @@ int COpenCVAppGUIDlg::OnAllocateBuffer(int cols, int rows)
 	return 0;
 }
 
+int COpenCVAppGUIDlg::UpdateInspList()
+{
+	//inspmethod는 함수지만 함수 포인터로 이용
+	_mInsps.insert(make_pair("OnInspFindcontourSample", &COpenCVAppGUIDlg::CallInspFindcontourSample));
+	_mInsps.insert(make_pair("OnInspFindShape", COpenCVAppGUIDlg::CallInspFindShape));
+	_mInsps.insert(make_pair("OnInspFillCircle", COpenCVAppGUIDlg::CallInspFillCircle));
+	_mInsps.insert(make_pair("OnInspFillRectangle", COpenCVAppGUIDlg::CallInspFillRectangle));
+	_mInsps.insert(make_pair("OnInspFillTriangle", COpenCVAppGUIDlg::CallInspFillTriangle));
+
+	_mInsps.insert(make_pair("OnDetectColor", COpenCVAppGUIDlg::CallOnDetectColor));
+	_mInsps.insert(make_pair("OnInspFillDouble", COpenCVAppGUIDlg::CallInspFillDouble));
+
+
+	return 1;
+}
+
 int COpenCVAppGUIDlg::OnInspection(InputArray src, OutputArray dst)
 {
 
@@ -649,15 +667,50 @@ int COpenCVAppGUIDlg::OnInspection(uchar* pSrc, size_t cols, size_t rows, uchar*
 	return 0;
 }
 
-
-
-
-
-
-void COpenCVAppGUIDlg::OnBnClickedBtnInspectionCv()
+int COpenCVAppGUIDlg::CallInspFindcontourSample(void* lpUserData)
 {
-	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
+	COpenCVAppGUIDlg* pDlg = reinterpret_cast<COpenCVAppGUIDlg*>(lpUserData);
+	return pDlg->OnInspFindcontourSample();
+}
 
+int COpenCVAppGUIDlg::CallInspFindShape(void* lpUserData)
+{
+	COpenCVAppGUIDlg* pDlg = reinterpret_cast<COpenCVAppGUIDlg*>(lpUserData);
+	return pDlg->OnInspFindShapes();
+}
+
+int COpenCVAppGUIDlg::CallInspFillCircle(void* lpUserData)
+{
+	COpenCVAppGUIDlg* pDlg = reinterpret_cast<COpenCVAppGUIDlg*>(lpUserData);
+	return pDlg->OnInspFillCircle();
+}
+
+int COpenCVAppGUIDlg::CallInspFillRectangle(void* lpUserData)
+{
+	COpenCVAppGUIDlg* pDlg = reinterpret_cast<COpenCVAppGUIDlg*>(lpUserData);
+	return pDlg->OnInspFillRectangle();
+}
+
+int COpenCVAppGUIDlg::CallInspFillTriangle(void* lpUserData)
+{
+	COpenCVAppGUIDlg* pDlg = reinterpret_cast<COpenCVAppGUIDlg*>(lpUserData);
+	return pDlg->OnInspFillTriangle();
+}
+
+int COpenCVAppGUIDlg::CallInspFillDouble(void* lpUserData)
+{
+	COpenCVAppGUIDlg* pDlg = reinterpret_cast<COpenCVAppGUIDlg*>(lpUserData);
+	return pDlg->OnInspFillDouble();
+}
+
+int COpenCVAppGUIDlg::CallOnDetectColor(void* lpUserData)
+{
+	COpenCVAppGUIDlg* pDlg = reinterpret_cast<COpenCVAppGUIDlg*>(lpUserData);
+	return pDlg->OnDetectColor();
+}
+
+int COpenCVAppGUIDlg::OnInspFindcontourSample()
+{
 	Mat src_gray = _mMatBuff[eImgSrcGray];
 	int thresh = 128;
 
@@ -672,8 +725,6 @@ void COpenCVAppGUIDlg::OnBnClickedBtnInspectionCv()
 	vector<vector<Point> > contours;
 	vector<Vec4i> hierarchy;
 	findContours(thr_img, contours, hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE);
-	//윤곽선을 통해 object를 받아옴. -> 윤곽선을 칠한걸 map file.. mask로 만듬
-
 
 	//canny_output.copyTo(_mMatBuff[eImgDebugGray]);
 	cvtColor(_mMatBuff[eImgDebugGray], _mMatBuff[eImgDebugColor], COLOR_GRAY2BGR);
@@ -712,7 +763,215 @@ void COpenCVAppGUIDlg::OnBnClickedBtnInspectionCv()
 	_bShowResult = true;
 	Invalidate(FALSE);
 
+	return 0;
+}
 
+int COpenCVAppGUIDlg::OnInspFindShapes()
+{
+	Mat src_gray = _mMatBuff[eImgSrcGray];
+	int thresh = 50;
+
+	RNG rng(12345);
+
+	Mat thr_img;
+	threshold(src_gray, thr_img, thresh, 255, THRESH_BINARY);
+	findContours(thr_img, contours, hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE);
+
+	
+
+	for (size_t i = 0; i < contours.size(); i++)
+	{
+		double area = contourArea(contours[i]);
+
+		if (contours[i].size() >= 100 && contours[i].size() <= 150)
+		{
+			circle_index = i;
+			continue;
+		}
+		else if (contours[i].size() == 4)
+		{
+			rectangle_index = i;
+			continue;
+		}
+		else if (contours[i].size() >= 150)
+		{
+			triangle_index = i;
+			continue;
+		}
+	}
+
+	//cvtColor(_mMatBuff[eImgDebugGray], _mMatBuff[eImgDebugColor], COLOR_GRAY2BGR);
+	//Mat drawing = _mMatBuff[eImgDebugColor];
+	//drawing = _mMatBuff[eImgDrawColor];
+
+	/*drawContours(drawing, contours, (int)rectangle_index, Scalar(255, 0, 0), 2, LINE_8, hierarchy, 0);
+	drawContours(drawing, contours, (int)triangle_index, Scalar(0, 255, 0), 2, LINE_8, hierarchy, 0);*/
+
+	//Mat mask = _mMatBuff[eImgDrawColor].clone();
+	//mask = 0;
+	//drawContours(drawing, contours, (int)circle_index, Scalar(0, 0, 255), 2, LINE_8, hierarchy, 0);
+	//drawContours(mask, contours, (int)rectangle_index, Scalar(0, 255, 255), CV_FILLED, 8, hierarchy);
+	//drawContours(mask, contours, (int)triangle_index, Scalar(255, 0, 255), CV_FILLED, 8, hierarchy);
+	//drawing = drawing & mask;
+
+	//OnInspFillCircle();
+	//OnInspFillRectangle();
+	//OnInspFillTriangle();
+
+	//imshow("Contours", drawing);
+	_bShowDebug = true;
+	_bShowResult = true;
+	Invalidate(FALSE);
+
+	return 0;
+}
+int COpenCVAppGUIDlg::OnInspFillCircle()
+{
+	COpenCVAppGUIDlg::OnInspFindShapes();
+	cvtColor(_mMatBuff[eImgDebugGray], _mMatBuff[eImgDebugColor], COLOR_GRAY2BGR);
+	Mat drawing = _mMatBuff[eImgDrawColor];
+	//drawContours(drawing, contours, (int)circle_index, Scalar(0, 0, 255), 2, LINE_8, hierarchy, 0);
+	drawContours(drawing, contours, 2, Scalar(0, 0, 255), 2, LINE_8, hierarchy, 0);
+	drawContours(drawing, contours, 4, Scalar(0, 0, 255), 2, LINE_8, hierarchy, 0);
+	drawContours(drawing, contours, 6, Scalar(0, 0, 255), 2, LINE_8, hierarchy, 0);
+
+	
+	Mat mask = _mMatBuff[eImgDrawColor].clone();
+	mask = 0;
+	//drawContours(mask, contours, (int)circle_index, Scalar(255, 255, 255), CV_FILLED, 8, hierarchy);
+	drawContours(mask, contours, 2, Scalar(0, 0, 255), 2, CV_FILLED, hierarchy, 0);
+	drawContours(mask, contours, 4, Scalar(0, 0, 255), 2, CV_FILLED, hierarchy, 0);
+	drawContours(mask, contours, 6, Scalar(0, 0, 255), 2, CV_FILLED, hierarchy, 0);
+	drawing = drawing & mask;
+
+	return 0;
+}
+
+int COpenCVAppGUIDlg::OnInspFillRectangle()
+{
+	COpenCVAppGUIDlg::OnInspFindShapes();
+	cvtColor(_mMatBuff[eImgDebugGray], _mMatBuff[eImgDebugColor], COLOR_GRAY2BGR);
+
+	Mat drawing = _mMatBuff[eImgDrawColor];
+	//drawContours(drawing, contours, (int)triangle_index, Scalar(0, 0, 255), 2, LINE_8, hierarchy, 0);
+	drawContours(drawing, contours,	1, Scalar(0, 255, 0), 2, LINE_8, hierarchy, 0);
+	drawContours(drawing, contours, 3, Scalar(0, 255, 0), 2, LINE_8, hierarchy, 0);
+
+	Mat mask = _mMatBuff[eImgDrawColor].clone();
+	mask = 0;
+	//drawContours(mask, contours, (int)triangle_index, Scalar(255, 255, 255), CV_FILLED, 8, hierarchy);
+	drawContours(mask, contours, 1, Scalar(0, 255, 0), CV_FILLED, 8, hierarchy);
+	drawContours(mask, contours, 3, Scalar(0, 255, 0), CV_FILLED, 8, hierarchy);
+	drawing = drawing & mask;
+
+	return 0;
+}
+int COpenCVAppGUIDlg::OnInspFillTriangle()
+{
+	COpenCVAppGUIDlg::OnInspFindShapes();
+	cvtColor(_mMatBuff[eImgDebugGray], _mMatBuff[eImgDebugColor], COLOR_GRAY2BGR);
+
+	Mat drawing = _mMatBuff[eImgDrawColor];
+	//drawContours(drawing, contours, (int)rectangle_index, Scalar(0, 0, 255), 2, LINE_8, hierarchy, 0);
+	drawContours(drawing, contours, 0, Scalar(0, 0, 255), 2, LINE_8, hierarchy, 0);
+	drawContours(drawing, contours, 5, Scalar(0, 0, 255), 2, LINE_8, hierarchy, 0);
+	drawContours(drawing, contours, 7, Scalar(0, 0, 255), 2, LINE_8, hierarchy, 0);
+
+	Mat mask = _mMatBuff[eImgDrawColor].clone();
+	mask = 0;
+	//drawContours(mask, contours, (int)rectangle_index, Scalar(255, 255, 255), CV_FILLED, 8, hierarchy);
+	drawContours(mask, contours, 0, Scalar(255, 0, 0), CV_FILLED, 8, hierarchy);
+	drawContours(mask, contours, 5, Scalar(255, 0, 0), CV_FILLED, 8, hierarchy);
+	drawContours(mask, contours, 7, Scalar(255, 0, 0), CV_FILLED, 8, hierarchy);
+	drawing = drawing & mask;
+
+	return 0;
+}
+
+int COpenCVAppGUIDlg::OnInspFillDouble()
+{
+	COpenCVAppGUIDlg::OnInspFindShapes();
+	cvtColor(_mMatBuff[eImgDebugGray], _mMatBuff[eImgDebugColor], COLOR_GRAY2BGR);
+
+	Mat drawing = _mMatBuff[eImgDrawColor];
+	//drawContours(drawing, contours, (int)rectangle_index, Scalar(0, 0, 255), 2, LINE_8, hierarchy, 0);
+	drawContours(drawing, contours, 1, Scalar(0, 255, 0), 2, LINE_8, hierarchy, 0);
+	drawContours(drawing, contours, 3, Scalar(0, 255, 0), 2, LINE_8, hierarchy, 0);
+	drawContours(drawing, contours, 0, Scalar(0, 0, 255), 2, LINE_8, hierarchy, 0);
+	drawContours(drawing, contours, 5, Scalar(0, 0, 255), 2, LINE_8, hierarchy, 0);
+	drawContours(drawing, contours, 7, Scalar(0, 0, 255), 2, LINE_8, hierarchy, 0);
+
+	Mat mask = _mMatBuff[eImgDrawColor].clone();
+	mask = 0;
+	//drawContours(mask, contours, (int)rectangle_index, Scalar(255, 255, 255), CV_FILLED, 8, hierarchy);
+	drawContours(mask, contours, 1, Scalar(0, 255, 0), CV_FILLED, 8, hierarchy);
+	drawContours(mask, contours, 3, Scalar(0, 255, 0), CV_FILLED, 8, hierarchy);
+	drawContours(mask, contours, 0, Scalar(255, 0, 0), CV_FILLED, 8, hierarchy);
+	drawContours(mask, contours, 5, Scalar(255, 0, 0), CV_FILLED, 8, hierarchy);
+	drawContours(mask, contours, 7, Scalar(255, 0, 0), CV_FILLED, 8, hierarchy);
+	drawing = drawing & mask;
+
+
+	return 0;
+}
+
+int COpenCVAppGUIDlg::OnDetectColor()
+{
+	Mat src_gray = _mMatBuff[eImgSrcGray];
+	int thresh = 50;
+
+	RNG rng(12345);
+
+	double circularity = 0;
+
+	Mat thr_img;
+	threshold(src_gray, thr_img, thresh, 255, THRESH_BINARY);
+	findContours(thr_img, contours, hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE);
+
+	for (size_t i = 0; i < contours.size(); i++)
+	{
+
+		double area = contourArea(contours[i]);
+		double length = arcLength(contours[i],true);
+
+		circularity = 4 * 3.14 * area / (length*length);
+		
+		if (circularity >= 0.85 && circularity <= 1)
+		{
+			Mat drawing = _mMatBuff[eImgDrawColor];
+			circle_index = i;
+			drawContours(drawing, contours, (int)circle_index, Scalar(0, 0, 255), 2, LINE_8, hierarchy, 0);
+			
+			Mat mask = _mMatBuff[eImgDrawColor].clone();
+			mask = 0;
+			drawContours(mask, contours, (int)circle_index, Scalar(0, 0, 255), CV_FILLED, 8, hierarchy);
+
+			drawing = drawing & mask;
+		}
+
+	}
+
+
+
+	return 0;
+}
+
+
+
+
+void COpenCVAppGUIDlg::OnBnClickedBtnInspectionCv()
+{
+	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
+	//auto f = _mInsps["OnInspFindcontourSample"];
+	//auto f = _mInsps["OnInspFindShape"];
+	//auto f = _mInsps["OnInspFillCircle"];
+	//auto f = _mInsps["OnInspFillRectangle"];
+	//auto f = _mInsps["OnInspFillTriangle"];
+	//auto f = _mInsps["OnInspFillDouble"];
+	auto f = _mInsps["OnDetectColor"];
+
+	auto ret = f(this); //int Oninspfindshape 호출.
+	//auto ret1 = f1(this);
 }
 
 
