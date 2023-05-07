@@ -11,6 +11,8 @@
 #include <fstream>
 #include <iomanip>
 #include <ctime>
+#include <format>
+
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -21,6 +23,7 @@
 #define NAME_WINDOW_DEBUG "srcDebug"
 #define NAME_WINDOW_RESULT "srcResult"
 #define WM_ADD_STRING	(WM_USER + 500) // user id 500번대에 작성.
+#define HISTO_MAX 256
 
 // 응용 프로그램 정보에 사용되는 CAboutDlg 대화 상자입니다.
 
@@ -271,9 +274,6 @@ void COpenCVAppGUIDlg::OnPaint()
 			}
 		}
 
-
-
-
 		CDialogEx::OnPaint();
 	}
 }
@@ -358,7 +358,7 @@ void COpenCVAppGUIDlg::OnBnClickedBtnLoad()
 		//else
 		//	_SourceImage.copyTo(_DrawImage);
 
-		string fileName = path;
+		string fileName = path.GetString();
 		_SourceImage = cv::imread(fileName, IMREAD_ANYCOLOR);
 
 		OnAllocateBuffer(_SourceImage.cols, _SourceImage.rows);
@@ -389,7 +389,7 @@ void COpenCVAppGUIDlg::OnBnClickedBtnSave()
 	//옵션 선택 부분.
 	if (dlgFileSave.DoModal() == IDOK)
 	{
-		string str = dlgFileSave.GetPathName();
+		string str = dlgFileSave.GetPathName().GetString();
 		imwrite(str, _SourceImage);
 	}
 
@@ -483,14 +483,6 @@ void COpenCVAppGUIDlg::OnBnClickedBtnInspection()
 	dst.copyTo(_mMatBuff[eImgDebugGray]);
 	cvtColor(_mMatBuff[eImgDebugGray], _mMatBuff[eImgDebugColor], COLOR_GRAY2BGR);
 
-
-
-
-
-
-
-
-
 	Mat draw = _mMatBuff[eImgDrawColor];
 	//cv::rectangle(draw, Rect(10, 10, 50, 50), Scalar(0, 0, 255), 3);
 	int thickness = 5;
@@ -576,8 +568,6 @@ int COpenCVAppGUIDlg::OnAllocateBuffer(int cols, int rows)
 
 	Mat vi = _mMatBuff[eImgSrcColor];
 
-
-
 	_mMatBuff[eImgSrcColor].copyTo(_mMatBuff[eImgDrawColor]);
 
 	//debug of map ... just create buffer as initilized value
@@ -597,8 +587,12 @@ int COpenCVAppGUIDlg::UpdateInspList()
 	_mInsps.insert(make_pair("OnInspSegmentColor", COpenCVAppGUIDlg::CallInspSegmentColor));
 	_mInsps.insert(make_pair("OnInspMorpology", COpenCVAppGUIDlg::CallInspMorpology));
 	_mInsps.insert(make_pair("OnDeleteNoise", COpenCVAppGUIDlg::CallDeleteNoise));
-
-
+	_mInsps.insert(make_pair("OnInspMorpologyMultiObjects", COpenCVAppGUIDlg::CallInspMorpologyMultiObjects));
+	_mInsps.insert(make_pair("OnInspHistoEqulization", COpenCVAppGUIDlg::CallInspHistoEqulization));
+	_mInsps.insert(make_pair("OnInspGamma", COpenCVAppGUIDlg::CallInspGamma));
+	_mInsps.insert(make_pair("OnInspCorrection", COpenCVAppGUIDlg::CallInspCorrection));
+	_mInsps.insert(make_pair("OnInspSearchingContour", COpenCVAppGUIDlg::CallInspSearchingContour));
+	_mInsps.insert(make_pair("OnInspMatching", COpenCVAppGUIDlg::CallInspMatching));
 
 	return 1;
 }
@@ -714,6 +708,46 @@ int COpenCVAppGUIDlg::CallDeleteNoise(void* lpUserData)
 {
 	COpenCVAppGUIDlg* pDlg = reinterpret_cast<COpenCVAppGUIDlg*>(lpUserData);
 	return pDlg->OnDeleteNoise();
+}
+int COpenCVAppGUIDlg::CallInspMorpologyMultiObjects(void* lpUserData)
+{
+	COpenCVAppGUIDlg* pDlg = reinterpret_cast<COpenCVAppGUIDlg*>(lpUserData);
+	return pDlg->OnInspMorpologyMultiObjects();
+}
+int COpenCVAppGUIDlg::CallInspDrawHistpogram(void* lpUserData)
+{
+	COpenCVAppGUIDlg* pDlg = reinterpret_cast<COpenCVAppGUIDlg*>(lpUserData);
+	return pDlg->OnInspDrawHistpogram();
+}
+int COpenCVAppGUIDlg::CallInspHistoEqulization(void* lpUserData)
+{
+	COpenCVAppGUIDlg* pDlg = reinterpret_cast<COpenCVAppGUIDlg*>(lpUserData);
+	return pDlg->OnInspHistoEqulization();
+}
+int COpenCVAppGUIDlg::CallInspGamma(void* lpUserData)
+{
+	COpenCVAppGUIDlg* pDlg = reinterpret_cast<COpenCVAppGUIDlg*>(lpUserData);
+	return pDlg->OnInspGamma();
+}
+int COpenCVAppGUIDlg::CallInspCorrection(void* lpUserData)
+{
+	COpenCVAppGUIDlg* pDlg = reinterpret_cast<COpenCVAppGUIDlg*>(lpUserData);
+	return pDlg->OnInspCorrection();
+}
+int COpenCVAppGUIDlg::CallInspSearchingContour(void* lpUserData)
+{
+	COpenCVAppGUIDlg* pDlg = reinterpret_cast<COpenCVAppGUIDlg*>(lpUserData);
+	return pDlg->OnInspSearchingContour();
+}
+int COpenCVAppGUIDlg::CallInspMSearchingContour(void* lpUserData)
+{
+	COpenCVAppGUIDlg* pDlg = reinterpret_cast<COpenCVAppGUIDlg*>(lpUserData);
+	return pDlg->OnInspSearchingContour();
+}
+int COpenCVAppGUIDlg::CallInspMatching(void* lpUserData)
+{
+	COpenCVAppGUIDlg* pDlg = reinterpret_cast<COpenCVAppGUIDlg*>(lpUserData);
+	return pDlg->OnInspMatching();
 }
 int COpenCVAppGUIDlg::OnInspFindcontourSample()
 {
@@ -938,7 +972,15 @@ void COpenCVAppGUIDlg::OnBnClickedBtnInspectionCv()
 	//auto f = _mInsps["OnInspFindMultiShape"];
 	//auto f = _mInsps["OnInspSegmentColor"];
 	//auto f = _mInsps["OnInspMorpology"];
-	auto f = _mInsps["OnDeleteNoise"];
+	//auto f = _mInsps["OnDeleteNoise"];
+	//auto f = _mInsps["OnInspMorpologyMultiObjects"];
+	//auto f = _mInsps["OnInspDrawHistpogram"];
+	//auto f = _mInsps["OnInspHistoEqulization"];
+	//auto f = _mInsps["OnInspGamma"];
+	//auto f = _mInsps["OnInspCorrection"];
+	//auto f = _mInsps["OnInspSearchingContour"];
+	//auto f = _mInsps["OnInspMSearchingContour"];
+	auto f = _mInsps["OnInspMatching"];
 
 	if (f == nullptr) return;
 	auto ret = f(this); // int COpenCVAppGUIDlg::OnInspFindShapes()
@@ -1119,20 +1161,11 @@ int COpenCVAppGUIDlg::OnInspMorpology()
 	//cvtColor(src_color, src_hsv, COLOR_BGR2HSV);
 	cvtColor(src_color, src_gray, COLOR_BGR2GRAY);
 
-	//red는 h가 179니까 160~180 이상. green은 37이니까 20~60정도. blue 99니까 80~110
 	const int max_value_H = 360 / 2;
 	const int max_value = 255;
 	int low_H = 0, low_S = 0, low_V = 0;
 	int high_H = max_value_H, high_S = max_value, high_V = max_value;
-	//Mat src_hsv_threshold_red, src_hsv_threshold_green, src_hsv_threshold_blue;
-	/*low_H = 160; high_H = 180;
-	inRange(src_hsv, Scalar(low_H, low_S, low_V), Scalar(high_H, high_S, high_V), src_hsv_threshold_red);
 
-	low_H = 20; high_H = 60;
-	inRange(src_hsv, Scalar(low_H, low_S, low_V), Scalar(high_H, high_S, high_V), src_hsv_threshold_green);*/
-
-	/*low_H = 80; high_H = 110;
-	inRange(src_hsv, Scalar(low_H, low_S, low_V), Scalar(high_H, high_S, high_V), src_hsv_threshold_blue);*/
 
 	
 	//Erosion ... 침식
@@ -1211,10 +1244,15 @@ int COpenCVAppGUIDlg::OnDeleteNoise()
 	double spec_min_Circle = 0.88;
 	double spec_max_Circle = 1.0;
 
-	img_thresh.copyTo(_mMatBuff[eImgDebugColor]);
+	/*img_thresh.copyTo(_mMatBuff[eImgDebugColor]);
 	Mat debug = _mMatBuff[eImgDebugColor];
 	_mMatBuff[eImgSrcColor].copyTo(_mMatBuff[eImgDebugColor]);
-	Mat drawing = _mMatBuff[eImgDebugColor];
+	Mat drawing = _mMatBuff[eImgDebugColor];*/
+
+	img_thresh.copyTo(_mMatBuff[eImgDebugColor]);
+	Mat debug = _mMatBuff[eImgDebugColor];
+	_mMatBuff[eImgSrcColor].copyTo(_mMatBuff[eImgResultColor]);
+	Mat drawing = _mMatBuff[eImgResultColor];
 
 	for (size_t i = 0; i < contours.size(); i++)
 	{
@@ -1234,9 +1272,10 @@ int COpenCVAppGUIDlg::OnDeleteNoise()
 
 
 		// 직사각형 그리기
-		rectangle(drawing, rt.boundingRect(), Scalar(0, 0, 0));
+		/*rectangle(drawing, rt.boundingRect(), Scalar(255, 255, 255));
+		putText(drawing, tag.str(), rt.boundingRect().tl(), CV_FONT_HERSHEY_TRIPLEX, 0.6, Scalar(0, 0, 255));*/
+		rectangle(debug, rt.boundingRect(), Scalar(0, 0, 255));
 		putText(drawing, tag.str(), rt.boundingRect().tl(), CV_FONT_HERSHEY_TRIPLEX, 0.6, Scalar(0, 0, 255));
-	
 		if (circularity >= spec_min_Triangle && circularity <= spec_max_Triangle)
 		{
 			vTriangle_index.push_back(i);
@@ -1261,3 +1300,968 @@ int COpenCVAppGUIDlg::OnDeleteNoise()
 	return 0;
 
 }
+
+int COpenCVAppGUIDlg::OnInspMorpologyMultiObjects()
+{
+	Mat src_gray = _mMatBuff[eImgSrcGray];
+	//resize(src_gray, src_gray, Size(src_gray.cols * 2, src_gray.rows * 2));
+	Mat src_bin;
+	threshold(src_gray, src_bin, 128, 255, ThresholdTypes::THRESH_BINARY_INV);
+
+
+	//Erosion...침식
+	int kernel_type = MORPH_RECT;// MORPH_RECT, MORPH_CROSS, MORPH_ELLIPSE
+	//   0 0 0     0            0 0
+	//   0 0 0   0 0 0        0 0 0
+	//   0 0 0     0          0 0 
+
+	int kernel_size = 1;
+	Mat element = getStructuringElement(kernel_type,
+		Size(2 * kernel_size + 1, 2 * kernel_size + 1),
+		Point(kernel_size, kernel_size));
+	Mat src_erode;
+	erode(src_bin, src_erode, element);
+
+	Mat diff = src_bin - src_erode;
+
+	//openning
+	Mat openning = src_bin.clone();
+	int openning_cnt = 1;
+	for (size_t i = 0; i < openning_cnt; i++)
+	{
+		erode(openning, openning, element, Point(-1, -1), 1);
+		dilate(openning, openning, element, Point(-1, -1), 1);
+	}
+
+	vector<vector<Point> > contours;
+	vector<Vec4i> hierarchy;
+	findContours(openning, contours, hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE);
+
+	cvtColor(openning, _mMatBuff[eImgDebugColor], CV_GRAY2BGR);
+	Mat drawing = _mMatBuff[eImgDebugColor];
+
+	for (size_t i = 0; i < contours.size(); i++)
+	{
+		RotatedRect rt = minAreaRect(contours[i]);
+		double area = contourArea(contours[i]);
+		double perimeter = arcLength(contours[i], true);
+		double circularity = 4 * CV_PI * area / (perimeter * perimeter);
+		ostringstream ss;
+		ss << std::fixed;
+		ss << "[";
+		ss << to_string(i + 1);
+		ss << "]";
+		ss << " area = ";
+		ss << std::setprecision(3) << area;
+		ss << " perimeter = ";
+		ss << std::setprecision(3) << perimeter;
+		ss << " circularity = ";
+		ss << std::setprecision(3) << circularity;
+		string ssTxt = ss.str();
+		AddString(ssTxt.c_str());
+
+
+		ostringstream tag;
+		tag << "[";
+		tag << to_string(i + 1);
+		tag << "]";
+		putText(drawing, tag.str(), rt.boundingRect().tl(), CV_FONT_HERSHEY_TRIPLEX, 1.0, Scalar(0, 255, 255));
+		rectangle(drawing, boundingRect(contours[i]), Scalar(255, 255, 0));
+	}
+
+
+	drawing = _mMatBuff[eImgDrawColor];
+
+	for (size_t i = 0; i < contours.size(); i++)
+	{
+		double area = contourArea(contours[i]);
+		if (area < 100) continue;
+		RotatedRect rt = minAreaRect(contours[i]);
+
+		double perimeter = arcLength(contours[i], true);
+		double circularity = 4 * CV_PI * area / (perimeter * perimeter);
+		ostringstream ss;
+		ss << "Final>>";
+		ss << std::fixed;
+		ss << "[";
+		ss << to_string(i + 1);
+		ss << "]";
+		ss << " area = ";
+		ss << std::setprecision(3) << area;
+		ss << " perimeter = ";
+		ss << std::setprecision(3) << perimeter;
+		ss << " circularity = ";
+		ss << std::setprecision(3) << circularity;
+		string ssTxt = ss.str();
+		AddString(ssTxt.c_str());
+
+
+		ostringstream tag;
+		tag << "[";
+		tag << to_string(i + 1);
+		tag << "]";
+		putText(drawing, tag.str(), rt.boundingRect().tl(), CV_FONT_HERSHEY_TRIPLEX, 0.7, Scalar(0, 0, 255));
+		rectangle(drawing, boundingRect(contours[i]), Scalar(0, 0, 255));
+	}
+
+	_bShowDebug = true;
+	_bShowResult = true;
+	Invalidate(FALSE);
+
+
+	return 0;
+}
+int COpenCVAppGUIDlg::OnInspDrawHistpogram()
+{
+	Mat src_color = _mMatBuff[eImgSrcColor];
+	Mat src_gray = _mMatBuff[eImgSrcGray];
+	int thickness = 1;
+	int lineType = LINE_8;
+	int histo[HISTO_MAX] = { 0, };
+	double gmin, gmax;
+
+	Point pt;
+
+	_mMatBuff[eImgSrcColor].copyTo(_mMatBuff[eImgDebugColor]);
+
+	Mat drawing = _mMatBuff[eImgDebugColor];
+
+	for (int row = 0; row < src_gray.rows; row++)
+	{
+		for (int col = 0; col < src_gray.cols; col++)
+		{
+			int index = row * src_gray.cols + col;
+			histo[src_gray.data[index]]++;
+		}
+	}
+
+	for(size_t i = 0; i<src_gray.rows* src_gray.cols; i++) 
+
+	for (int i = 0; i < HISTO_MAX; i++)
+	{
+		double value = histo[i] / 5;
+
+		line(drawing, Point(0, i*2), Point(value, i*2), Scalar(255, 0, 0), thickness, lineType);
+	}
+
+	//drawing = _mMatBuff[eImgDrawColor];
+
+	_bShowDebug = true;
+	_bShowResult = true;
+	Invalidate(FALSE);
+
+	return 0;
+}
+
+int COpenCVAppGUIDlg::OnInspHistoEqulization()
+{
+	_bShowDebug = _bShowResult = false;
+
+	Mat src_gray = _mMatBuff[eImgSrcGray];
+
+	const int histo_max = 256;
+	int histo[histo_max] = { 0, };
+	int cumulative_freq[histo_max] = { 0, };
+	int new_gray_value[histo_max] = { 0, };
+	//get histogram :: 히스토그램
+	for (size_t i = 0; i < src_gray.cols * src_gray.rows; i++) histo[src_gray.data[i]]++;
+
+	//get cumulative frequence :: 누적분포
+	cumulative_freq[0] = histo[0];
+	//for (size_t i = 1; i < histo_max; i++) cumulative_freq[i]=histo[i] + cumulative_freq[i-1];
+
+	//get new value
+	int acc = 0;
+	for (size_t i = 0; i < histo_max; i++)
+	{
+		acc += histo[i];
+		cumulative_freq[i] = acc;
+		//new_gray_value[i] = round((((float)cumulative_freq[i]) * 255) / src_gray.cols * src_gray.rows);
+		new_gray_value[i] = round((((float)acc) * 255) / (src_gray.cols * src_gray.rows)); //히스토그램 평활화(equalization)
+		//새로운 밝기 계산.
+	}
+
+	//drawing...histo debug color area
+	int thickness = 1;
+	int lineType = LINE_8;
+
+	cvtColor(_mMatBuff[eImgSrcGray], _mMatBuff[eImgDebugColor], ColorConversionCodes::COLOR_GRAY2BGR);
+
+	Mat debug_draw = _mMatBuff[eImgDebugColor];
+	//draw   |------>
+	bool view_horizontal = false;
+	bool view_vertical = true;
+	if (view_horizontal)
+	{
+		for (size_t row = 0; row < histo_max; row++)
+		{
+			line(debug_draw, Point(0, row * 2), Point(histo[row] / 10, row * 2), Scalar(255, 0, 255), thickness, lineType);
+		}
+	}
+
+	if (view_vertical)
+	{
+		int height = src_gray.rows;
+		for (size_t col = 0; col < histo_max; col++)
+		{
+			//draw histo
+			Point pt1 = Point(col * 2, height - 1);//start
+			Point pt2 = Point(col * 2, height - 1 - histo[col] / 10);//end
+			line(debug_draw, pt1, pt2, Scalar(0, 255, 128), thickness, lineType);
+		}
+
+		int max_cumulate = cumulative_freq[histo_max - 1];
+		for (size_t col = 0; col < histo_max; col++)
+		{
+			if (col == 0)
+			{
+				int scaled_v = (cumulative_freq[col] / max_cumulate) * height;
+				Point pt1 = Point(col * 2, scaled_v);//start
+				Point pt2 = Point(col * 2, scaled_v);//end
+				line(debug_draw, pt1, pt2, Scalar(0, 0, 255), thickness, lineType);
+				continue;
+			}
+			//draw cumulate
+			int scaled_v1 = (cumulative_freq[col - 1] * 1.0 / max_cumulate) * height;
+			int scaled_v2 = (cumulative_freq[col] * 1.0 / max_cumulate) * height;
+			Point pt1 = Point(col * 2, height - scaled_v1);//start
+			Point pt2 = Point(col * 2, height - scaled_v2);//end
+			line(debug_draw, pt1, pt2, Scalar(0, 0, 255), thickness, lineType);
+		}
+	}
+
+
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	Mat src_gray_histoEqual = _mMatBuff[eImgSrcGray].clone();
+	for (size_t i = 0; i < src_gray.cols * src_gray.rows; i++)
+	{
+		src_gray_histoEqual.data[i] = new_gray_value[src_gray.data[i]];
+	}
+	cvtColor(src_gray_histoEqual, _mMatBuff[eImgDrawColor], ColorConversionCodes::COLOR_GRAY2BGR);
+
+
+
+	//get histogram :: 히스토그램
+	for (size_t i = 0; i < src_gray.cols * src_gray.rows; i++) histo[src_gray_histoEqual.data[i]]++;
+
+	//get cumulative frequence :: 누적분포
+	cumulative_freq[0] = histo[0];
+	//for (size_t i = 1; i < histo_max; i++) cumulative_freq[i]=histo[i] + cumulative_freq[i-1];
+
+	//get new value
+	acc = 0;
+	for (size_t i = 0; i < histo_max; i++)
+	{
+		acc += histo[i];
+		cumulative_freq[i] = acc;
+		//new_gray_value[i] = round((((float)cumulative_freq[i]) * 255) / src_gray.cols * src_gray.rows);
+		new_gray_value[i] = round((((float)acc) * 255) / (src_gray.cols * src_gray.rows));
+	}
+
+	//drawing...histo debug color area
+	thickness = 1;
+	lineType = LINE_8;
+
+
+	Mat color_draw = _mMatBuff[eImgDrawColor];
+	//draw   |------>
+	view_horizontal = false;
+	view_vertical = true;
+	if (view_horizontal)
+	{
+		for (size_t row = 0; row < histo_max; row++)
+		{
+			line(color_draw, Point(0, row * 2), Point(histo[row] / 10, row * 2), Scalar(255, 0, 255), thickness, lineType);
+		}
+	}
+
+	if (view_vertical)
+	{
+		int height = src_gray.rows;
+		for (size_t col = 0; col < histo_max; col++)
+		{
+			//draw histo
+			Point pt1 = Point(col * 2, height - 1);//start
+			Point pt2 = Point(col * 2, height - 1 - histo[col] / 13);//end
+			line(color_draw, pt1, pt2, Scalar(0, 255, 128), thickness, lineType);
+		}
+
+		int max_cumulate = cumulative_freq[histo_max - 1];
+		for (size_t col = 0; col < histo_max; col++)
+		{
+			if (col == 0)
+			{
+				int scaled_v = (cumulative_freq[col] / max_cumulate) * height;
+				Point pt1 = Point(col * 2, scaled_v);//start
+				Point pt2 = Point(col * 2, scaled_v);//end
+				line(color_draw, pt1, pt2, Scalar(0, 0, 255), thickness, lineType);
+				continue;
+			}
+			//draw cumulate
+			int scaled_v1 = (cumulative_freq[col - 1] * 1.0 / max_cumulate) * height;
+			int scaled_v2 = (cumulative_freq[col] * 1.0 / max_cumulate) * height;
+			Point pt1 = Point(col * 2, height - scaled_v1);//start
+			Point pt2 = Point(col * 2, height - scaled_v2);//end
+			line(color_draw, pt1, pt2, Scalar(0, 0, 255), thickness, lineType);
+
+		}
+	}
+
+	//SNR
+	Mat enhanced_img = src_gray_histoEqual;
+	Mat src_img = src_gray;
+
+	Mat abs_diff;
+	absdiff(enhanced_img, src_img, abs_diff);
+	abs_diff.convertTo(abs_diff, CV_32F);
+	abs_diff = abs_diff.mul(abs_diff);
+
+	Scalar s_sum = cv::sum(abs_diff);
+	double sum = s_sum.val[0];
+	double MSE = 0, PSNR = 0;
+	if (sum <= 1e-10)
+	{
+		MSE = PSNR = 0;
+	}
+	else
+	{
+		MSE = sum / (double)(src_img.channels() * src_img.total());
+		PSNR = 10.0 * log10((255 * 255) / MSE);
+	}
+	string msg = "";
+	msg = "MSE = " + to_string(MSE) + " PSNR = " + to_string(PSNR);
+	AddString(msg.c_str());
+
+
+	_bShowDebug = _bShowResult = true;
+
+	Invalidate(FALSE);
+	return 0;
+}
+
+int COpenCVAppGUIDlg::OnInspGamma()
+{
+	_bShowDebug = _bShowResult = false;
+
+	Mat src_gray = _mMatBuff[eImgSrcGray]; //얕은 복사. 주소값이 같다.
+	//새로운 이미지 버퍼 생성
+	Mat src_gray_add = cv::Mat(src_gray.size(), src_gray.type());
+
+	src_gray_add = src_gray.clone(); //깊은 복사. 주소값은 다르고 데이터는 같다.
+	
+
+	Mat gamma_gray_1 = src_gray;
+
+	for (size_t row = 0; row < src_gray.rows * src_gray.cols; row++)
+	{
+		if (src_gray_add.data[row] + 30 > 255)
+			src_gray_add.data[row] = 255;
+		else
+			src_gray_add.data[row] += 30;
+	}
+
+	Mat gamma_gray_2 = src_gray;
+
+	for (size_t i = 0; i < src_gray.rows * src_gray.cols; i++)
+	{
+		gamma_gray_2.data[i] *=1.5;
+	}
+
+	Mat gamma_gray_3 = src_gray;
+
+	for (size_t i = 0; i < src_gray.rows * src_gray.cols; i++)
+	{
+		gamma_gray_3.data[i] = gamma_gray_3.data[i] * 1.24+20;
+	}
+
+
+	//감마 보정 look up table
+	Mat src_gray_gamma = cv::Mat::zeros(src_gray.size(), src_gray.type());
+
+
+	for (size_t i = 0; i < src_gray.rows * src_gray.cols; i++)
+	{
+		gamma_gray_3.data[i] = gamma_gray_3.data[i] * 1.24 + 20;
+	}
+
+
+	_bShowDebug = _bShowResult = true;
+
+	Invalidate(FALSE);
+	return 0;
+}
+
+int COpenCVAppGUIDlg::OnInspCorrection()
+{
+	_bShowDebug = _bShowResult = false;
+	double minV, maxV;
+	Mat src_gray = _mMatBuff[eImgSrcGray];//얕은복사...주소값이 같다
+
+
+	Mat src_Color = _mMatBuff[eImgSrcColor];
+	OnDrawHistogram(src_gray, src_Color);
+
+	putText(src_Color, string("Original"), Point(10, 50), CV_FONT_HERSHEY_TRIPLEX, 0.6, Scalar(0, 255, 255));
+
+	string msg = "";
+
+	msg = "[ Left ] Original Histogram";
+	cv::minMaxLoc(src_gray, &minV, &maxV);
+	msg += std::format("  min Value = {:0.3f}", minV);
+	msg += std::format("  max Value = {:0.3f}", maxV);
+
+	AddString(msg.c_str());
+
+	//1.각 픽셀 밝기를 + 30 만큼 증가하시오
+	//새로운 이미지 버퍼를 생성
+	Mat src_gray_add = cv::Mat(src_gray.size(), src_gray.type()/*CV_8UC1*/);
+	src_gray_add = 0;
+	//초기값이 0인 버퍼가 생성
+
+	//src_gray_add = src_gray.clone();//깊은복사...주소값이 달라짐. 데이타는 같다
+
+
+	int add_value = 30;
+	uchar* pData = src_gray.data;//원본
+	for (size_t row = 0; row < src_gray.rows; row++)
+	{
+		for (size_t col = 0; col < src_gray.cols; col++)
+		{
+			uchar* pDataAdd = src_gray_add.data;//목적
+			pDataAdd[row * src_gray.cols + col] = pData[row * src_gray.cols + col];
+			//1   =   1
+			if (pDataAdd[row * src_gray.cols + col] + add_value > 255)
+				pDataAdd[row * src_gray.cols + col] = 255;
+			else
+				pDataAdd[row * src_gray.cols + col] += add_value;//255보다 크다?  256->1 300->45
+			//a = b
+			//a += 30
+			//uchar ... 용량...0~255 [256] 
+		}
+	}
+
+	for (size_t i = 0; i < src_gray.total(); i++)
+	{
+		uchar* pDataAdd = src_gray_add.data;//목적
+		pDataAdd[i] = pData[i];
+		if (pDataAdd[i] + add_value > 255)
+			pDataAdd[i] = 255;
+		else
+			pDataAdd[i] += add_value;//255보다 크다?  256->1 300->45
+	}
+
+	Mat src_gray_matrix_add = cv::Mat(src_gray.size(), src_gray.type()/*CV_8UC1*/);
+	//src_gray.copyTo(src_gray_matrix_add);
+	//src_gray_matrix_add += add_value;
+	src_gray_matrix_add = src_gray * 1 + add_value;
+
+	Mat debugColor = _mMatBuff[eImgDebugColor];
+	cvtColor(src_gray_matrix_add, debugColor, COLOR_GRAY2BGR);
+	OnDrawHistogram(src_gray_matrix_add, debugColor);
+	putText(debugColor, string("Math Add + 30"), Point(10, 50), CV_FONT_HERSHEY_TRIPLEX, 0.6, Scalar(0, 255, 255));
+
+	msg = "";
+	msg = "[ Center ] Add 30 Histogram";
+	cv::minMaxLoc(src_gray_matrix_add, &minV, &maxV);
+	msg += std::format("  min Value = {:0.3f}", minV);
+	msg += std::format("  max Value = {:0.3f}", maxV);
+
+	AddString(msg.c_str());
+
+
+	//2.각 픽셀 밝기를 1.5배만큼 증가하시오
+	//3.각 픽셀 밝기를 1.24배하고 20만큼 증가하시오
+	Mat src_gray_matrix_op = cv::Mat(src_gray.size(), src_gray.type()/*CV_8UC1*/);
+	double a = 1.24;
+	int b = 20;
+	src_gray_matrix_op = src_gray * a + b;
+
+
+
+	//Gamma Correction
+	// LUT : Look Up Table
+	//int histo[256] = { 0, };
+	int LUT[256] = { 0, };
+	// .... 0 -> LUT[0] -> 10
+	// .... 2 -> LUT[2] -> 12
+	//수식변환공식의 생략 ... LUT
+	//𝑠 = 255×(𝑟 / 255)^𝛾
+	double gamma = 0.4;
+	for (size_t i = 0; i < 256; i++)
+	{
+		LUT[i] = std::pow(i / 255.0, gamma) * 255.0;
+	}
+
+
+	// 
+	// 
+	//Mat src_gray_gamma = cv::Mat(src_gray.size(), src_gray.type()/*CV_8UC1*/);
+	//src_gray_gamma = 0;
+
+	Mat src_gray_gamma = cv::Mat::zeros(src_gray.size(), src_gray.type()/*CV_8UC1*/);
+	for (size_t i = 0; i < src_gray.total(); i++)
+	{
+		uchar* pDataGamma = src_gray_gamma.data;//목적
+		pDataGamma[i] = LUT[pData[i]];
+	}
+
+
+	Mat drawColor = _mMatBuff[eImgDrawColor];
+	cvtColor(src_gray_gamma, drawColor, COLOR_GRAY2BGR);
+	OnDrawHistogram(src_gray_gamma, drawColor);
+	putText(drawColor, string("Gamma r 0.4"), Point(10, 50), CV_FONT_HERSHEY_TRIPLEX, 0.6, Scalar(0, 255, 255));
+
+	msg = "";
+	msg = "[ Right ] gamma 0.4 Histogram";
+	cv::minMaxLoc(src_gray_gamma, &minV, &maxV);
+	msg += std::format("  min Value = {:0.3f}", minV);
+	msg += std::format("  max Value = {:0.3f}", maxV);
+
+	AddString(msg.c_str());
+
+	_bShowDebug = _bShowResult = true;
+
+	Invalidate(FALSE);
+	return 0;
+}
+int COpenCVAppGUIDlg::OnInspMSearchingContour()
+{
+	vector<vector<Point>> Contours;
+	vector<Point> Contour;
+
+	const int cols = 10;
+	const int rows = 10;
+	int i = 0;
+	vector<int>filled;
+
+	uchar buff[rows * cols] = {
+		0,0,0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0,0,0,
+		0,0,0,1,1,1,1,1,0,0,
+		0,1,1,1,1,1,1,0,0,0,
+		0,1,1,1,1,1,1,1,0,0,
+		0,0,0,1,1,1,1,1,0,0,
+		0,0,0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0,0,0,
+	};
+
+	int start_row = 0;
+	int start_col = 0;
+
+	for (size_t row = 0; row < rows; row++)
+	{
+		for (size_t col = 0; col < cols; col++)
+		{
+			int index = row * cols + col;
+			if (buff[index] == 1)
+			{
+				Contour.push_back(Point(row, col));
+			}
+		}
+	}
+	
+	int cont_row = 0;
+	int cont_col = 0;
+	int cnt=0;
+	for (size_t i = 0; i < Contour.size(); i++)
+	{
+		int index = cont_row * cols + cont_col;
+		cont_row = Contour[i].x;
+		cont_col = Contour[i].y;
+
+		for (int row = 0; row < 3; row++)
+		{
+			for (int col = 0; col < 3; col++)
+			{
+				if (buff[index + cols * (row - 1) + (col - 1)] == 1)
+				{
+					buff[index + cols * (row - 1) + (col - 1)] = 255;
+					cnt++;
+				}
+			}
+		}
+	}
+
+    return 0;
+}
+
+
+int COpenCVAppGUIDlg::OnInspSearchingContour()
+{
+	//아래 사각형의 Contour를 구하시오
+	vector<vector<Point>> Contours;
+	vector<Point> Contour;
+	Contours.clear();
+	Contour.clear();
+
+	const int cols = 10;
+	const int rows = 10;
+	uchar buff[rows * cols] = {
+		0,0,0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0,0,0,
+		0,0,0,1,1,1,1,0,0,0,
+		0,0,0,1,1,1,1,0,0,0,
+		0,0,0,1,1,1,1,0,0,0,
+		0,0,0,1,1,1,1,0,0,0,
+		0,0,0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0,0,0,
+	};
+
+	uchar buff_label[rows * cols] = {
+		0,0,0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0,0,0,
+	};
+	Mat bufImg = Mat(rows, cols, CV_8UC1, buff);
+	Mat bufLabel = Mat(rows, cols, CV_8UC1, buff_label);
+	bufImg *= 255;
+
+
+	int label = 0;
+	Point ptStart(0, 0);
+	bool bStart = false;
+	bool bFind = false;
+
+	Contour.clear();
+	bFind = false;
+	for (size_t row = 0; row < rows; row++)
+	{
+		for (size_t col = 0; col < cols; col++)
+		{
+			int index = (row)*cols + (col);
+			if (bufImg.data[index] == 255 && bufLabel.data[index] == 0)
+			{
+				bFind = true;
+				bufLabel.data[index] = 255;
+				ptStart = Point(col, row);
+				Contour.push_back(ptStart);
+			}
+			if (bFind)
+			{
+				break;
+			}
+		}
+		if (bFind)
+		{
+			break;
+		}
+
+	}
+
+	//enum eDIR {eEE, eEN,eNN, eWN, eWW, eWS, eSS, eES, eDirMax};
+	enum eDIR { eEE, eES, eSS, eWS, eWW, eWN, eNN, eEN, eDirMax };
+	vector<Point> vDir(eDirMax);
+	vDir[(int)eEE] = Point(1, 0);
+	vDir[(int)eEN] = Point(1, -1);
+	vDir[(int)eNN] = Point(0, -1);
+	vDir[(int)eWN] = Point(-1, -1);
+	vDir[(int)eWW] = Point(-1, 0);
+	vDir[(int)eWS] = Point(-1, 1);
+	vDir[(int)eSS] = Point(0, 1);
+	vDir[(int)eES] = Point(1, 1);
+
+	int dir = eEE;
+	Point ptCur = ptStart;
+
+	do
+	{
+		bFind = false;
+		Point ptNext = ptCur + vDir[dir];
+		if (ptStart == ptNext)
+			break;
+		//search cross
+		if (bufImg.data[(ptNext.y) * cols + (ptNext.x)] == 255 &&
+			bufLabel.data[(ptNext.y) * cols + (ptNext.x)] != 255)
+		{
+			bufLabel.data[(ptNext.y) * cols + (ptNext.x)] = 255;
+			bFind = true;
+			Contour.push_back(ptNext);
+		}
+		else
+		{
+			dir++;
+		}
+		if (bFind)
+		{
+			ptCur = ptNext;
+			//dir = eEE;
+		}
+	} while (true);
+
+	for (size_t i = 1; i < Contour.size(); i++)
+	{
+		Point pre = Contour[i - 1];
+		Point cur = Contour[i];
+		double diff_pre = sqrt((pre.x - cur.x) * (pre.x - cur.x) + (pre.y - cur.y) * (pre.y - cur.y));
+		if (diff_pre == 1 && pre.y == cur.y)
+		{
+			Contour.erase(Contour.begin() + i);
+		}
+		if (diff_pre == 1 && pre.x == cur.x)
+		{
+			Contour.erase(Contour.begin() + i);
+		}
+	}
+
+	Contours.push_back(Contour);
+
+	for (auto& contour : Contours)
+	{
+		for (auto& iter : contour)
+		{
+			string msg = "";
+			msg = "x, y = ";
+			msg += std::format("{:d}, {:d}", iter.x, iter.y);
+			AddString(msg.c_str());
+		}
+	}
+
+	return 0;
+}
+
+int COpenCVAppGUIDlg::OnDrawHistogram(const Mat& src_gray, Mat& draw_color)
+{
+	const int histo_max = 256;
+	int histo[histo_max] = { 0, };
+
+	//get histogram :: 히스토그램
+	for (size_t i = 0; i < src_gray.cols * src_gray.rows; i++) histo[src_gray.data[i]]++;
+
+	//drawing...histo debug color area
+	double thickness = 1;
+	int lineType = LINE_8;
+
+	Mat color_draw = draw_color;
+	//draw   |------>
+	int height = src_gray.rows;
+	for (size_t col = 0; col < histo_max; col++)
+	{
+		//draw histo
+		Point pt1 = Point(col * 2, height - 1);//start
+		Point pt2 = Point(col * 2, height - 1 - histo[col] / 10);//end
+		line(color_draw, pt1, pt2, Scalar(0, 255, 128), thickness, lineType);
+	}
+
+	return 1;
+}
+
+
+int COpenCVAppGUIDlg::OnInspMatching()
+{
+	_bShowDebug = _bShowResult = false;
+
+
+	Mat search_img = cv::imread("../Build/x64/image/search_array.png", IMREAD_GRAYSCALE);
+	//Mat search_ptrn = cv::imread("../Build/x64/image/search_ptrn_rect.png", IMREAD_GRAYSCALE);
+	Mat search_ptrn = cv::imread("../Build/x64/image/search_ptrn_rect_small.png", IMREAD_GRAYSCALE);
+
+
+	if (0)//C++_Debug_Performance : 72s
+	{
+		/*Mat matching_img = search_img.clone();
+			matching_img = 0;*/
+		Mat matching_img = Mat::zeros(Size(search_img.cols - search_ptrn.cols + 1, search_img.rows - search_ptrn.rows + 1), CV_32F);
+
+		vector<Point> ptFind; ptFind.clear();
+		//pattern matching
+		for (size_t row = 0; row < search_img.rows - search_ptrn.rows + 1; row++)
+		{
+			for (size_t col = 0; col < search_img.cols - search_ptrn.cols + 1; col++)
+			{
+				uchar* pSearch = search_img.data;
+				uchar* pPtrn = search_ptrn.data;//5x2
+
+				double TM_SQDIFF = 0.0;
+				double TM_SQDIFF_NORMED = 0.0;
+				for (size_t prow = 0; prow < search_ptrn.rows; prow++)
+				{
+					for (size_t pcol = 0; pcol < search_ptrn.cols; pcol++)
+					{
+						int search_index = (row + prow) * search_img.cols + (col + pcol);
+						int ptrn_index = prow * search_ptrn.cols + pcol;
+
+						double diff = pSearch[search_index] - pPtrn[ptrn_index];
+						TM_SQDIFF += (diff * diff);
+					}
+				}
+				double ptrnSQ = 0., searchSQ = 0.;
+				for (size_t prow = 0; prow < search_ptrn.rows; prow++)
+				{
+					for (size_t pcol = 0; pcol < search_ptrn.cols; pcol++)
+					{
+						int search_index = (row + prow) * search_img.cols + (col + pcol);
+						int ptrn_index = prow * search_ptrn.cols + pcol;
+						searchSQ += pSearch[search_index] * pSearch[search_index];
+						ptrnSQ += pPtrn[ptrn_index] * pPtrn[ptrn_index];
+					}
+				}
+
+				//matching_img.at<double>(row, col) = TM_SQDIFF;
+				//if (TM_SQDIFF == 0)
+				//	ptFind.push_back(Point(col, row));
+
+				if (ptrnSQ == 0) ptrnSQ = 1;
+				TM_SQDIFF_NORMED = TM_SQDIFF / sqrt(ptrnSQ * searchSQ);
+				matching_img.at<float>(row, col) = TM_SQDIFF_NORMED;
+
+				if (TM_SQDIFF_NORMED <= 0.003)
+					ptFind.push_back(Point(col, row));
+			}
+		}
+
+		Mat search_img_color = cv::imread("../Build/x64/images/search_array.png", IMREAD_ANYCOLOR);
+		for (size_t i = 0; i < ptFind.size(); i++)
+		{
+			cv::rectangle(search_img_color, Rect(ptFind[i].x, ptFind[i].y, search_ptrn.cols, search_ptrn.rows), Scalar(0, 0, 255), 3);
+		}
+
+
+	}
+
+
+	if (0) // OpenCV + Debug = 164ms
+	{
+		Mat match_result;
+		cv::matchTemplate(search_img, search_ptrn, match_result, TemplateMatchModes::TM_SQDIFF_NORMED);
+		double minV, maxV;
+		Point minLoc, maxLoc, matchLoc;
+		cv::minMaxLoc(match_result, &minV, &maxV, &minLoc, &maxLoc);
+		matchLoc = minLoc;//TemplateMatchModes::TM_SQDIFF_NORMED
+		Mat search_img_color = cv::imread("../Build/x64/images/search_array.png", IMREAD_ANYCOLOR);
+		cv::rectangle(search_img_color, Rect(matchLoc.x, matchLoc.y, search_ptrn.cols, search_ptrn.rows), Scalar(0, 0, 255), 3);
+
+		Mat match_bin;
+		double match_threshold = 0.003;
+		threshold(match_result, match_bin, match_threshold, 255, ThresholdTypes::THRESH_BINARY_INV);
+
+		match_bin.convertTo(match_bin, CV_8UC1);
+		vector<vector<Point> > contours;
+		vector<Vec4i> hierarchy;
+		findContours(match_bin, contours, hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE);
+
+		for (size_t i = 0; i < contours.size(); i++)
+		{
+			RotatedRect rt = minAreaRect(contours[i]);
+			cv::rectangle(search_img_color, Rect(rt.center.x, rt.center.y, search_ptrn.cols, search_ptrn.rows), Scalar(0, 255, 255), 1);
+		}
+	}
+
+	for (double zoom = 1.0; zoom < 1.5; zoom += 0.01)
+	{
+		//Mat search_ptrn = cv::imread("../Build/x64/image/search_ptrn_rect_small.png", IMREAD_GRAYSCALE);
+		resize(search_ptrn, search_ptrn, Size(search_ptrn.cols * zoom, search_ptrn.rows * zoom), 0, 0, InterpolationFlags::INTER_AREA);
+
+		Mat match_result;
+		cv::matchTemplate(search_img, search_ptrn, match_result, TemplateMatchModes::TM_CCORR_NORMED);
+		double minV, maxV;
+		Point minLoc, maxLoc, matchLoc;
+		cv::minMaxLoc(match_result, &minV, &maxV, &minLoc, &maxLoc);
+		matchLoc = minLoc;//TemplateMatchModes::TM_SQDIFF_NORMED
+
+		double ptrnSQ = 0., searchSQ = 0.;
+		for (size_t row = 0;  row < search_img.rows;  row++)
+		{
+			for (size_t col = 0;  col < search_img.cols;  col++)
+			{
+				uchar* pSearch = search_img.data;
+				uchar* pPtrn = match_result.data;//5x2
+				double TM_SQDIFF = 0.0;
+				double TM_SQDIFF_NORMED = 0.0;
+				for (size_t prow = 0; prow < match_result.rows; prow++)
+				{
+					for (size_t pcol = 0; pcol < match_result.cols; pcol++)
+					{
+						int search_index = (row + prow) * match_result.cols + (col + pcol);
+						int ptrn_index = prow * match_result.cols + pcol;
+						searchSQ += pSearch[search_index] * pSearch[search_index];
+						ptrnSQ += pPtrn[ptrn_index] * pPtrn[ptrn_index];
+					}
+					
+				}
+				if (ptrnSQ == 0) ptrnSQ = 1;
+				TM_SQDIFF_NORMED = TM_SQDIFF / sqrt(ptrnSQ * searchSQ);
+				//match_result.at<float>(row, col) = TM_SQDIFF_NORMED;
+			}
+		}
+
+
+
+		Mat search_img_color = cv::imread("../Build/x64/image/search_array.png", IMREAD_ANYCOLOR);
+		cv::rectangle(search_img_color, Rect(matchLoc.x, matchLoc.y, search_ptrn.cols, search_ptrn.rows), Scalar(0, 0, 255), 3);
+
+		Mat match_bin;
+		double match_threshold = 0.067;
+		threshold(match_result, match_bin, match_threshold, 255, ThresholdTypes::THRESH_BINARY_INV);
+
+		match_bin.convertTo(match_bin, CV_8UC1);
+		vector<vector<Point> > contours;
+		vector<Vec4i> hierarchy;
+		findContours(match_bin, contours, hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE);
+
+		for (size_t i = 0; i < contours.size(); i++)
+		{
+			RotatedRect rt = minAreaRect(contours[i]);
+			cv::rectangle(search_img_color, Rect(rt.center.x, rt.center.y, search_ptrn.cols, search_ptrn.rows), Scalar(0, 255, 255), 1);
+			//cv::rectangle(search_img_color, boundingRect(contours[i]), Scalar(0, 255, 255), 1);
+		}
+	}
+
+
+	/*_bShowDebug = _bShowResult = false;
+
+	Mat search_img = cv::imread("search_array.png", IMREAD_GRAYSCALE);
+	Mat search_img_color = cv::imread("search_array.png", IMREAD_ANYCOLOR);
+	for (double zoom = 1.0; zoom < 2.0; zoom += 0.01) {
+		Mat search_ptrn = cv::imread("search_ptrn_rect_small.png", IMREAD_GRAYSCALE);
+		//Mat matching_img = search_img.clone();
+		//matching_img = 128;
+		//Mat matching_img(search_img.size(), CV_64F,Scalar(128,128,128));
+		resize(search_ptrn, search_ptrn, Size(search_ptrn.cols * zoom, search_ptrn.rows * zoom), 0, 0, InterpolationFlags::INTER_AREA);
+		Mat match_result;
+		Mat match100;
+		cv::matchTemplate(search_img, search_ptrn, match_result, TemplateMatchModes::TM_CCORR_NORMED);
+		vector<Point> matchLoc;
+		//cv::minMaxLoc(match_result, &minV, &maxV, &minLoc, &maxLoc);
+		match100 = match_result * 100;
+		for (int row = 0; row < match_result.rows; row++) {
+			for (int col = 0; col < match_result.cols; col++) {
+				if (match100.at<float>(row, col) >= 99.545) {
+					matchLoc.push_back(Point(col, row));
+				}
+			}
+		}//TemplateMatchModes::TM_SQDIFF_NORMED
+		
+		if (matchLoc.size() == 6) {
+			for (int i = 0; i < matchLoc.size(); i++) {
+				cv::rectangle(search_img_color, Rect(matchLoc[i].x, matchLoc[i].y, search_ptrn.cols, search_ptrn.rows), Scalar(0, 0, 255), 3);
+			}
+			break;
+		}
+		else {
+			matchLoc.clear();
+		}
+	}
+	_bShowDebug = _bShowResult = true;
+
+	Invalidate(FALSE);
+	return 0;*/
+
+
+	_bShowDebug = _bShowResult = true;
+
+	Invalidate(FALSE);
+	return 0;
+}
+
